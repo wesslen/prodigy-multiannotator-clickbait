@@ -28,4 +28,6 @@ PRODIGY_KEY="1234-ABCD-5678-EFGH"
 
 The project has a few notable files/folders: 
 
-- The `data` folder contains `.wav` files. This is empty by default but users can run the `make download` to download the files.
+- The `data/problems` folder contains `.json`, `.html`, and `.jpg` files. This is empty by default but users can run the `make download` to download the files.
+
+- Annotation ground truth are provided as `.csv` files in the `data/truth` folder.
