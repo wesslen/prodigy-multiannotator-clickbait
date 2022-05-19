@@ -18,7 +18,6 @@ download:
 	rm -rf corpus-webis-clickbait-16.zip
 	rm -r webis-clickbait-16
 
-
 clean-cache:
 	rm -rf */__pycache__/*
 	rm -rf .ipynb_checkpoints
@@ -28,3 +27,6 @@ clean-files:
 
 clean-venv:
 	rm -rf venv
+
+preprocess:
+	python scripts/preprocess.py
