@@ -42,8 +42,8 @@ def process_raw(input_path: Path):
     for i in folders:
         files = glob.glob(i + "*/*")
         json_file = [f for f in files if ".json" in f]
-        html_file = [f for f in files if ".html" in f]
-        image_file = [f for f in files if ".png" in f]
+        #html_file = [f for f in files if ".html" in f]
+        #image_file = [f for f in files if ".png" in f]
         j = srsly.read_json(json_file[0])
         l = (Clumper(labels)
             .keep(lambda d: d['id'] == str(j["id"]))
@@ -51,14 +51,14 @@ def process_raw(input_path: Path):
         
         if json_file:
             textcat_data.append({"text": j["text"], 
-                               #"image": image_file, 
-                               #"html": html_file, 
+                               #"image": image_file[0], 
+                               #"html": html_file[0], 
                                "label": "CLICKBAIT",
                                "answer": "accept" if l[0]['labelMajority']=='clickbait' else "reject",
                                "meta": {"id": j["id"], "created_at": j["created_at"]}})
             multilabel_data.append({"text": j["text"], 
-                                #"image": image_file, 
-                                #"html": html_file, 
+                                #"image": image_file[0], 
+                                #"html": html_file[0], 
                                 "cats": {"ANN1": 1.0 if l[0]['labelA'] in ['strong','medium'] else 0.0, "ANN2": 1.0 if l[0]['labelB'] in ['strong','medium'] else 0.0, "ANN3": 1.0 if l[0]['labelC'] in ['strong','medium'] else 0.0},
                                 "meta": {"id": j["id"], "created_at": j["created_at"]}})    
 
@@ -67,8 +67,8 @@ def process_raw(input_path: Path):
 def preprocess():
     textcat_data, multilabel_data = process_raw("data/problems/*")
 
-    export_jsonl("data/tweets-textcat.jsonl", textcat_data)
-    export_jsonl("data/tweets-multilabel.jsonl", multilabel_data)
+    export_jsonl("assets/tweets-textcat.jsonl", textcat_data)
+    export_jsonl("assets/tweets-multilabel.jsonl", multilabel_data)
 
 if __name__ == "__main__":
     typer.run(preprocess)
