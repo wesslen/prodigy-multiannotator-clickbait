@@ -1,0 +1,76 @@
+partition:
+  cmd: python -m spacy run partition
+  script:
+    - python scripts/partition.py assets/tweets-multilabel.jsonl assets/multilabel_train.jsonl
+      assets/multilabel_dev.jsonl
+  deps: []
+  outs:
+    - path: assets/multilabel_train.jsonl
+      md5: e6b5d70077e31e13997ed0c2bb1dcb18
+    - path: assets/multilabel_dev.jsonl
+      md5: f3bb8b2e4457e2ebd203cb7469b21f37
+  spacy_version: 3.2.4
+  spacy_git_version: b50fe5ec6
+convert:
+  cmd: python -m spacy run convert
+  script:
+    - python scripts/convert.py en assets/multilabel_train.jsonl corpus/train.spacy
+    - python scripts/convert.py en assets/multilabel_dev.jsonl corpus/dev.spacy
+  deps:
+    - path: assets/multilabel_train.jsonl
+      md5: e6b5d70077e31e13997ed0c2bb1dcb18
+    - path: assets/multilabel_dev.jsonl
+      md5: f3bb8b2e4457e2ebd203cb7469b21f37
+    - path: scripts/convert.py
+      md5: a4be472b527e029d4a66b594ecf628cf
+  outs:
+    - path: corpus/train.spacy
+      md5: 9102d8b05e3e6bef5dd8175798a0e528
+    - path: corpus/dev.spacy
+      md5: 418bee65f73e70afcba5cdf856eeb384
+  spacy_version: 3.2.4
+  spacy_git_version: b50fe5ec6
+train:
+  cmd: python -m spacy run train
+  script:
+    - python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy
+      --paths.dev corpus/dev.spacy --nlp.lang en --gpu-id -1
+  deps:
+    - path: configs/config.cfg
+      md5: fc5710e530cf948597c9cee67738dc22
+    - path: corpus/train.spacy
+      md5: 9102d8b05e3e6bef5dd8175798a0e528
+    - path: corpus/dev.spacy
+      md5: 418bee65f73e70afcba5cdf856eeb384
+  outs:
+    - path: training/model-best
+      md5: 3db042bd3324b23266af73c2de34bd91
+  spacy_version: 3.2.4
+  spacy_git_version: b50fe5ec6
+evaluate:
+  cmd: python -m spacy run evaluate
+  script:
+    - python -m spacy evaluate training/model-best corpus/dev.spacy --output training/metrics.json
+  deps:
+    - path: corpus/dev.spacy
+      md5: 418bee65f73e70afcba5cdf856eeb384
+    - path: training/model-best
+      md5: 3db042bd3324b23266af73c2de34bd91
+  outs:
+    - path: training/metrics.json
+      md5: 5a7a70fae9ced1ef60a4954b1008864a
+  spacy_version: 3.2.4
+  spacy_git_version: b50fe5ec6
+package:
+  cmd: python -m spacy run package
+  script:
+    - python -m spacy package training/model-best packages --name prodigy_multiannotator_clickbait
+      --version 0.0.0 --force
+  deps:
+    - path: training/model-best
+      md5: 3db042bd3324b23266af73c2de34bd91
+  outs:
+    - path: packages/en_prodigy_multiannotator_clickbait-0.0.0/dist/en_prodigy_multiannotator_clickbait-0.0.0.tar.gz
+      md5: 09352571403fbe6e3834c7b4d368624f
+  spacy_version: 3.2.4
+  spacy_git_version: b50fe5ec6
