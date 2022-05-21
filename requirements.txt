@@ -1,3 +1,4 @@
+spacy-streamlit>=1.0.0a0
 jupyterlab==3.0.0
 clumper==0.2.15
 fastapi==0.68.2
