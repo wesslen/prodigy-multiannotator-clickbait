@@ -3,31 +3,47 @@ partition:
   script:
     - python scripts/partition.py assets/tweets-multilabel.jsonl assets/multilabel_train.jsonl
       assets/multilabel_dev.jsonl
+    - python scripts/partition.py assets/tweets-textcat.jsonl assets/textcat_train.jsonl
+      assets/textcat_dev.jsonl
   deps: []
   outs:
     - path: assets/multilabel_train.jsonl
-      md5: e6b5d70077e31e13997ed0c2bb1dcb18
+      md5: c6fa99b303dd71c9f8bda2763384adf2
     - path: assets/multilabel_dev.jsonl
-      md5: f3bb8b2e4457e2ebd203cb7469b21f37
+      md5: dbe35f096ad0ec3ead1c6900c3bc3e20
+    - path: assets/textcat_train.jsonl
+      md5: 9570db386ef5210d483b3522ef5a8c89
+    - path: assets/textcat_dev.jsonl
+      md5: eec94532c4a0b3efe5de268b29f1ba1d
   spacy_version: 3.2.4
   spacy_git_version: b50fe5ec6
 convert:
   cmd: python -m spacy run convert
   script:
-    - python scripts/convert.py en assets/multilabel_train.jsonl corpus/train.spacy
-    - python scripts/convert.py en assets/multilabel_dev.jsonl corpus/dev.spacy
+    - python scripts/convert.py en assets/multilabel_train.jsonl corpus/multilabel-train.spacy
+    - python scripts/convert.py en assets/multilabel_dev.jsonl corpus/multilabel-dev.spacy
+    - python scripts/convert.py en assets/textcat_train.jsonl corpus/textcat-train.spacy
+    - python scripts/convert.py en assets/textcat_dev.jsonl corpus/textcat-dev.spacy
   deps:
     - path: assets/multilabel_train.jsonl
-      md5: e6b5d70077e31e13997ed0c2bb1dcb18
+      md5: c6fa99b303dd71c9f8bda2763384adf2
     - path: assets/multilabel_dev.jsonl
-      md5: f3bb8b2e4457e2ebd203cb7469b21f37
+      md5: dbe35f096ad0ec3ead1c6900c3bc3e20
+    - path: assets/textcat_train.jsonl
+      md5: 9570db386ef5210d483b3522ef5a8c89
+    - path: assets/textcat_dev.jsonl
+      md5: eec94532c4a0b3efe5de268b29f1ba1d
     - path: scripts/convert.py
       md5: a4be472b527e029d4a66b594ecf628cf
   outs:
-    - path: corpus/train.spacy
-      md5: 9102d8b05e3e6bef5dd8175798a0e528
-    - path: corpus/dev.spacy
-      md5: 418bee65f73e70afcba5cdf856eeb384
+    - path: corpus/multilabel-train.spacy
+      md5: 8d07f60eeae241f121e4a79597ef23c7
+    - path: corpus/multilabel-dev.spacy
+      md5: 28bd315a5e0d48623c01bab0cb8a6356
+    - path: corpus/textcat-train.spacy
+      md5: b4c2f448cfd9c67ee5b2a65d77436dce
+    - path: corpus/textcat-dev.spacy
+      md5: 47db86ace5a5b99012b25aae719c2605
   spacy_version: 3.2.4
   spacy_git_version: b50fe5ec6
 train:
@@ -50,15 +66,24 @@ train:
 evaluate:
   cmd: python -m spacy run evaluate
   script:
-    - python -m spacy evaluate training/model-best corpus/dev.spacy --output training/metrics.json
+    - python -m spacy evaluate training/multilabel/model-best corpus/multilabel-dev.spacy
+      --output training/multilabel/metrics.json
+    - python -m spacy evaluate training/textcat/model-best corpus/textcat-dev.spacy
+      --output training/textcat/metrics.json
   deps:
-    - path: corpus/dev.spacy
-      md5: 418bee65f73e70afcba5cdf856eeb384
-    - path: training/model-best
-      md5: 3db042bd3324b23266af73c2de34bd91
+    - path: corpus/multilabel-dev.spacy
+      md5: 28bd315a5e0d48623c01bab0cb8a6356
+    - path: training/multilabel/model-best
+      md5: 2a002b573d76d88da144903bc9ab6ef8
+    - path: corpus/textcat-dev.spacy
+      md5: 47db86ace5a5b99012b25aae719c2605
+    - path: training/textcat/model-best
+      md5: 088fcdd73eb15b785d5bb6a505f2d522
   outs:
-    - path: training/metrics.json
-      md5: 5a7a70fae9ced1ef60a4954b1008864a
+    - path: training/multilabel/metrics.json
+      md5: 89e5a0cb9b4194e59e7f4336a9b1fb9c
+    - path: training/textcat/metrics.json
+      md5: d7c68d1d5a72b14b6ff45459aa5f21f1
   spacy_version: 3.2.4
   spacy_git_version: b50fe5ec6
 package:
@@ -72,5 +97,71 @@ package:
   outs:
     - path: packages/en_prodigy_multiannotator_clickbait-0.0.0/dist/en_prodigy_multiannotator_clickbait-0.0.0.tar.gz
       md5: 09352571403fbe6e3834c7b4d368624f
+  spacy_version: 3.2.4
+  spacy_git_version: b50fe5ec6
+spacy-report:
+  cmd: python -m spacy run spacy-report
+  script:
+    - python -m spacy report textcat training/model-best/ corpus/train.spacy corpus/dev.spacy
+  deps:
+    - path: scripts/visualize_model.py
+      md5: e3e6fe8bfe66af7f3b84f5e2c53dff94
+    - path: training/model-best
+      md5: 3db042bd3324b23266af73c2de34bd91
+    - path: corpus/train.spacy
+      md5: 9102d8b05e3e6bef5dd8175798a0e528
+    - path: corpus/dev.spacy
+      md5: 418bee65f73e70afcba5cdf856eeb384
+  outs:
+    - path: reports/
+      md5: 3cbcda4ee4489fb8d6ff96af4ea58ac0
+  spacy_version: 3.3.0
+  spacy_git_version: 497a708c7
+ml-train:
+  cmd: python -m spacy run ml-train
+  script:
+    - python -m spacy train configs/config_multilabel.cfg --output training/multilabel
+      --paths.train corpus/multilabel-train.spacy --paths.dev corpus/multilabel-dev.spacy
+      --nlp.lang en --gpu-id -1
+  deps:
+    - path: configs/config_multilabel.cfg
+      md5: 525faeb843672b2643e1495013a569e0
+    - path: corpus/multilabel-train.spacy
+      md5: 8d07f60eeae241f121e4a79597ef23c7
+    - path: corpus/multilabel-dev.spacy
+      md5: 28bd315a5e0d48623c01bab0cb8a6356
+  outs:
+    - path: training/multilabel/model-best
+      md5: 2a002b573d76d88da144903bc9ab6ef8
+  spacy_version: 3.2.4
+  spacy_git_version: b50fe5ec6
+tc-train:
+  cmd: python -m spacy run tc-train
+  script:
+    - python -m spacy train configs/config_textcat.cfg --output training/textcat/
+      --paths.train corpus/textcat-train.spacy --paths.dev corpus/textcat-dev.spacy
+      --nlp.lang en --gpu-id -1
+  deps:
+    - path: configs/config_textcat.cfg
+      md5: 08dc677c2a0f1b221a5b19a5e6a01405
+    - path: corpus/textcat-train.spacy
+      md5: b4c2f448cfd9c67ee5b2a65d77436dce
+    - path: corpus/textcat-dev.spacy
+      md5: 47db86ace5a5b99012b25aae719c2605
+  outs:
+    - path: training/textcat/model-best
+      md5: 088fcdd73eb15b785d5bb6a505f2d522
+  spacy_version: 3.2.4
+  spacy_git_version: b50fe5ec6
+preprocess:
+  cmd: python -m spacy run preprocess
+  script:
+    - python scripts/preprocess.py
+  deps: []
+  outs:
+    - path: assets/tweets-textcat.jsonl
+      md5: 7026a75763a3937e9b442f0cef9de7ac
+    - path: assets/tweets-multilabel.jsonl
+      md5: 69bfed473d985ec0c20a3388353794e0
   spacy_version: 3.2.4
   spacy_git_version: b50fe5ec6

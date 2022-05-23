@@ -9,10 +9,14 @@ vars:
   # Set your GPU ID, -1 is CPU
   gpu_id: -1
   version: "0.0.1"
-  train: "multilabel_train.jsonl"
-  dev: "multilabel_dev.jsonl"
-  raw: "tweets-multilabel.jsonl"
-  config: "config.cfg"
+  multilabel-train: "multilabel_train.jsonl"
+  multilabel-dev: "multilabel_dev.jsonl"
+  multilabel-raw: "tweets-multilabel.jsonl"
+  config_multilabel: "config_multilabel.cfg"
+  textcat-train: "textcat_train.jsonl"
+  textcat-dev: "textcat_dev.jsonl"
+  textcat-raw: "tweets-textcat.jsonl"
+  config_textcat: "config_textcat.cfg"
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
@@ -21,82 +25,151 @@ directories: ["assets", "corpus", "configs", "training", "scripts", "packages"]
 # Assets that should be downloaded or available in the directory. We're shipping
 # them with the project, so they won't have to be downloaded.
 assets:
-  - dest: "assets/${vars.train}"
-    description: "Clickbait training data"
-  - dest: "assets/${vars.dev}"
-    description: "Clickbait development data"
+  - dest: "assets/${vars.multilabel-train}"
+    description: "Clickbait training data for multilabels"
+  - dest: "assets/${vars.multilabel-dev}"
+    description: "Clickbait development data for multilabels"
+  - dest: "assets/${vars.textcat-train}"
+    description: "Clickbait training data for textcat (Majority)"
+  - dest: "assets/${vars.textcat-dev}"
+    description: "Clickbait development data for textcat (Majority)"
 
 # Workflows are sequences of commands (see below) executed in order. You can
 # run them via "spacy project run [workflow]". If a commands's inputs/outputs
 # haven't changed, it won't be re-run.
 workflows:
-  all:
+  preprocess-all:
+    - preprocess
     - partition
     - convert
-    - train
+
+  train:
+    - ml-train
+    - tc-train
     - evaluate
-    - package
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
+  - name: "preprocess"
+    help: "Preprocess raw files to jsonl"
+    script:
+      - "python scripts/preprocess.py"
+    outputs:
+      - "assets/tweets-textcat.jsonl"
+      - "assets/tweets-multilabel.jsonl"
+
   - name: "partition"
     help: "Partition jsonl"
     script:
-      - "python scripts/partition.py assets/${vars.raw} assets/${vars.train} assets/${vars.dev}"
+      - "python scripts/partition.py assets/${vars.multilabel-raw} assets/${vars.multilabel-train} assets/${vars.multilabel-dev}"
+      - "python scripts/partition.py assets/${vars.textcat-raw} assets/${vars.textcat-train} assets/${vars.textcat-dev}"
     outputs: 
-      - "assets/${vars.train}"
-      - "assets/${vars.dev}"
+      - "assets/${vars.multilabel-train}"
+      - "assets/${vars.multilabel-dev}"
+      - "assets/${vars.textcat-train}"
+      - "assets/${vars.textcat-dev}"
 
   - name: "convert"
     help: "Convert the data to spaCy's binary format"
     script:
-      - "python scripts/convert.py ${vars.lang} assets/${vars.train} corpus/train.spacy"
-      - "python scripts/convert.py ${vars.lang} assets/${vars.dev} corpus/dev.spacy"
+      - "python scripts/convert.py ${vars.lang} assets/${vars.multilabel-train} corpus/multilabel-train.spacy"
+      - "python scripts/convert.py ${vars.lang} assets/${vars.multilabel-dev} corpus/multilabel-dev.spacy"
+      - "python scripts/convert.py ${vars.lang} assets/${vars.textcat-train} corpus/textcat-train.spacy"
+      - "python scripts/convert.py ${vars.lang} assets/${vars.textcat-dev} corpus/textcat-dev.spacy"
     deps:
-      - "assets/${vars.train}"
-      - "assets/${vars.dev}"
+      - "assets/${vars.multilabel-train}"
+      - "assets/${vars.multilabel-dev}"
+      - "assets/${vars.textcat-train}"
+      - "assets/${vars.textcat-dev}"
       - "scripts/convert.py"
     outputs:
-      - "corpus/train.spacy"
-      - "corpus/dev.spacy"
+      - "corpus/multilabel-train.spacy"
+      - "corpus/multilabel-dev.spacy"
+      - "corpus/textcat-train.spacy"
+      - "corpus/textcat-dev.spacy"
 
-  - name: "train"
+  - name: "ml-train"
+    help: "Train the multilabel model"
+    script:
+      - "python -m spacy train configs/${vars.config_multilabel} --output training/multilabel --paths.train corpus/multilabel-train.spacy --paths.dev corpus/multilabel-dev.spacy --nlp.lang ${vars.lang} --gpu-id ${vars.gpu_id}"
+    deps:
+      - "configs/${vars.config_multilabel}"
+      - "corpus/multilabel-train.spacy"
+      - "corpus/multilabel-dev.spacy"
+    outputs:
+      - "training/multilabel/model-best"
+
+  - name: "tc-train"
     help: "Train the textcat model"
     script:
-      - "python -m spacy train configs/${vars.config} --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --nlp.lang ${vars.lang} --gpu-id ${vars.gpu_id}"
+      - "python -m spacy train configs/${vars.config_textcat} --output training/textcat/ --paths.train corpus/textcat-train.spacy --paths.dev corpus/textcat-dev.spacy --nlp.lang ${vars.lang} --gpu-id ${vars.gpu_id}"
     deps:
-      - "configs/${vars.config}"
-      - "corpus/train.spacy"
-      - "corpus/dev.spacy"
+      - "configs/${vars.config_textcat}"
+      - "corpus/textcat-train.spacy"
+      - "corpus/textcat-dev.spacy"
     outputs:
-      - "training/model-best"
+      - "training/textcat/model-best"
 
   - name: "evaluate"
     help: "Evaluate the model and export metrics"
     script:
-      - "python -m spacy evaluate training/model-best corpus/dev.spacy --output training/metrics.json"
+      - "python -m spacy evaluate training/multilabel/model-best corpus/multilabel-dev.spacy --output training/multilabel/metrics.json"
+      - "python -m spacy evaluate training/textcat/model-best corpus/textcat-dev.spacy --output training/textcat/metrics.json"
     deps:
-      - "corpus/dev.spacy"
-      - "training/model-best"
+      - "corpus/multilabel-dev.spacy"
+      - "training/multilabel/model-best"
+      - "corpus/textcat-dev.spacy"
+      - "training/textcat/model-best"
     outputs:
-      - "training/metrics.json"
+      - "training/multilabel/metrics.json"
+      - "training/textcat/metrics.json"
 
   - name: package
     help: "Package the trained model as a pip package"
     script:
-      - "python -m spacy package training/model-best packages --name ${vars.name} --version ${vars.version} --force"
+      - "python -m spacy package training/multilabel/model-best packages --name ${vars.name} --version ${vars.version} --force"
     deps:
-      - "training/model-best"
+      - "training/multilabel/model-best"
     outputs_no_cache:
       - "packages/${vars.lang}_${vars.name}-${vars.version}/dist/${vars.lang}_${vars.name}-${vars.version}.tar.gz"
 
-  - name: visualize-model
+  - name: ml-visualize-model
     help: Visualize the model's output interactively using Streamlit
     script:
-      - "streamlit run scripts/visualize_model.py training/model-best \"23 Mexican breakfast that'll make every morning a freakin' fiesta!\""
+      - "streamlit run scripts/visualize_model.py training/multilabel/model-best \"23 Mexican breakfast that'll make every morning a freakin' fiesta!\""
     deps:
       - "scripts/visualize_model.py"
-      - "training/model-best"
+      - "training/multilabel/model-best"
+
+  # - name: ml-spacy-report
+  #   help: Interactive views for threshold values for classification
+  #   script:
+  #     - "python -m spacy report textcat training/multilabel/model-best/ corpus/multilabel-train.spacy corpus/multilabel-dev.spacy"
+  #   deps:
+  #     - "training/multilabel/model-best"
+  #     - "corpus/multilabel-train.spacy"
+  #     - "corpus/multilabel-dev.spacy"
+  #   outputs:
+  #     - "reports/multilabel/"
+
+  - name: tc-visualize-model
+    help: Visualize the model's output interactively using Streamlit
+    script:
+      - "streamlit run scripts/visualize_model.py training/textcat/model-best \"23 Mexican breakfast that'll make every morning a freakin' fiesta!\""
+    deps:
+      - "scripts/visualize_model.py"
+      - "training/textcat/model-best"
+
+  # - name: tc-spacy-report
+  #   help: Interactive views for threshold values for classification
+  #   script:
+  #     - "python -m spacy report textcat training/textcat/model-best/ corpus/textcat-train.spacy corpus/textcat-dev.spacy"
+  #   deps:
+  #     - "training/textcat/model-best"
+  #     - "corpus/textcat-train.spacy"
+  #     - "corpus/textcat-dev.spacy"
+  #   outputs:
+  #     - "reports/textcat/"
