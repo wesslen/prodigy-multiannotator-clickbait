@@ -23,10 +23,20 @@ clean-cache:
 	rm -rf .ipynb_checkpoints
 
 clean-files:
-	rm -rf data
+	rm -vr data
+	rm -vr assets
+	rm -vr corpus
+	rm -vr training
+	rm -vr packages
 
 clean-venv:
-	rm -rf venv
+	rm -r venv
 
-preprocess:
-	python scripts/preprocess.py
+mark:
+	python -m prodigy mark clickbait-mark data/tweets-textcat.jsonl --view-id image_manual
+
+image.manual:
+	python -m prodigy image.manual clickbait-images data/tweets-textcat.jsonl --label CLICKBAIT --remove-base64
+
+html:
+	python -m prodigy html clickbait-html data/tweets-textcat.jsonl --view-id classification	
