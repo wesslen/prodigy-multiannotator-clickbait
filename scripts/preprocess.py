@@ -7,6 +7,7 @@ import glob
 import srsly
 import random
 from clumper import Clumper
+import re
 
 def export_jsonl(output_path: Path, data):
     json_lines = [json.dumps(l) for l in data]
@@ -50,13 +51,14 @@ def process_raw(input_path: Path):
             .collect())
         
         if json_file:
-            textcat_data.append({"text": j["text"], 
+            textcat_data.append({"text": re.sub(r'http\S+', '', j["text"]),  
                                #"image": image_file[0], 
                                #"html": html_file[0], 
-                               "label": "CLICKBAIT",
-                               "answer": "accept" if l[0]['labelMajority']=='clickbait' else "reject",
+                               #"label": "CLICKBAIT",
+                               #"answer": "accept" if l[0]['labelMajority']=='clickbait' else "reject",
+                               "cats": {"CLICKBAIT": True if l[0]['labelMajority']=='clickbait' else False, "NOT_CLICKBAIT": False if l[0]['labelMajority']=='clickbait' else True},
                                "meta": {"id": j["id"], "created_at": j["created_at"]}})
-            multilabel_data.append({"text": j["text"], 
+            multilabel_data.append({"text": re.sub(r'http\S+', '', j["text"]), 
                                 #"image": image_file[0], 
                                 #"html": html_file[0], 
                                 "cats": {"ANN1": 1.0 if l[0]['labelA'] in ['strong','medium'] else 0.0, "ANN2": 1.0 if l[0]['labelB'] in ['strong','medium'] else 0.0, "ANN3": 1.0 if l[0]['labelC'] in ['strong','medium'] else 0.0},

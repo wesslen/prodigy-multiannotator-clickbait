@@ -11,7 +11,7 @@ def partition(input_path: Path, train_jsonl: Path, dev_jsonl: Path):
     random.seed(42)
     console = Console()
     clump = (Clumper.read_jsonl(input_path)
-      .mutate(set=lambda d: "dev" if random.random() < 0.5 else "train"))
+      .mutate(set=lambda d: "dev" if random.random() < 0.2 else "train"))
     
     if pathlib.Path(train_jsonl).exists():
         pathlib.Path(train_jsonl).unlink()
