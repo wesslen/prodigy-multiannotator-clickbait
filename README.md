@@ -55,7 +55,7 @@ in the project directory.
 
 <!-- SPACY PROJECT: AUTO-GENERATED DOCS END (do not remove) -->
 
-### Project overview
+## Project overview
 
 This project contains code for running experiments on reframing Webis-16 Clickbait dataset [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.3251557.svg)](http://dx.doi.org/10.5281/zenodo.3251557) as a multi-label/task problem by annotators consistent with [Davani et al., 2022](https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00449/109286/Dealing-with-Disagreements-Looking-Beyond-the).
 
@@ -63,7 +63,7 @@ This project contains code for running experiments on reframing Webis-16 Clickba
 
 Figure from Davani et al., 2022 TACL
 
-## Installation
+### Installation
 
 The installation process is automated via `make`.
 
@@ -85,7 +85,7 @@ something like:
 PRODIGY_KEY="1234-ABCD-5678-EFGH"
 ```
 
-## Contents 
+### Contents 
 
 The project has a few notable files/folders: 
 
@@ -93,7 +93,7 @@ The project has a few notable files/folders:
 
 - Annotation ground truth are provided as `.csv` files in the `data/truth` folder.
 
-## Instances
+### Instances
 
 Here are instances of each file:
 
