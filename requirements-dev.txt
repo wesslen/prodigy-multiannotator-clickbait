@@ -1,0 +1,9 @@
+spacy-streamlit>=1.0.0a0
+spacy==3.2.4
+jupyterlab==3.0.0
+clumper==0.2.15
+fastapi==0.68.2
+matplotlib==3.5.1
+umap-learn==0.5.2
+rich==12.4.1
+flake8==4.0.1
