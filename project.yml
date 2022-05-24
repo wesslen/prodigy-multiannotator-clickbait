@@ -44,8 +44,7 @@ workflows:
     - convert
 
   train:
-    - ml-train
-    - tc-train
+    - train
     - evaluate
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
@@ -91,26 +90,20 @@ commands:
       - "corpus/textcat-train.spacy"
       - "corpus/textcat-dev.spacy"
 
-  - name: "ml-train"
-    help: "Train the multilabel model"
+  - name: "train"
+    help: "Run customized training runs: 2 experiments (Baseline/textcat + Multilabel)"
     script:
       - "python -m spacy train configs/${vars.config_multilabel} --output training/multilabel --paths.train corpus/multilabel-train.spacy --paths.dev corpus/multilabel-dev.spacy --nlp.lang ${vars.lang} --gpu-id ${vars.gpu_id}"
+      - "python -m spacy train configs/${vars.config_textcat} --output training/textcat/ --paths.train corpus/textcat-train.spacy --paths.dev corpus/textcat-dev.spacy --nlp.lang ${vars.lang} --gpu-id ${vars.gpu_id}"
     deps:
       - "configs/${vars.config_multilabel}"
       - "corpus/multilabel-train.spacy"
       - "corpus/multilabel-dev.spacy"
-    outputs:
-      - "training/multilabel/model-best"
-
-  - name: "tc-train"
-    help: "Train the textcat model"
-    script:
-      - "python -m spacy train configs/${vars.config_textcat} --output training/textcat/ --paths.train corpus/textcat-train.spacy --paths.dev corpus/textcat-dev.spacy --nlp.lang ${vars.lang} --gpu-id ${vars.gpu_id}"
-    deps:
       - "configs/${vars.config_textcat}"
       - "corpus/textcat-train.spacy"
       - "corpus/textcat-dev.spacy"
     outputs:
+      - "training/multilabel/model-best"
       - "training/textcat/model-best"
 
   - name: "evaluate"
