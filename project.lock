@@ -8,13 +8,13 @@ partition:
   deps: []
   outs:
     - path: assets/multilabel_train.jsonl
-      md5: 29a0933d13c30df98e0eee6d73ca973d
+      md5: 1fe6b86e9675789da44afc976ce76bc2
     - path: assets/multilabel_dev.jsonl
-      md5: 520bf499fbb4113d92229e95eeb77ae7
+      md5: 7b5f611ae9dd9830660f8a5d97f50496
     - path: assets/textcat_train.jsonl
-      md5: 33a1eef44a22a7a212b30ed4b2a136e2
+      md5: e2c21bde4a0b2159fea66c05df742a22
     - path: assets/textcat_dev.jsonl
-      md5: 697dc99ce6b6fa304a17791fccd892a9
+      md5: 3315d7f220b3c1e2cb64623630d971a9
   spacy_version: 3.2.4
   spacy_git_version: b50fe5ec6
 convert:
@@ -26,41 +26,53 @@ convert:
     - python scripts/convert.py en assets/textcat_dev.jsonl corpus/textcat-dev.spacy
   deps:
     - path: assets/multilabel_train.jsonl
-      md5: c6fa99b303dd71c9f8bda2763384adf2
+      md5: 1fe6b86e9675789da44afc976ce76bc2
     - path: assets/multilabel_dev.jsonl
-      md5: dbe35f096ad0ec3ead1c6900c3bc3e20
+      md5: 7b5f611ae9dd9830660f8a5d97f50496
     - path: assets/textcat_train.jsonl
-      md5: 9570db386ef5210d483b3522ef5a8c89
+      md5: e2c21bde4a0b2159fea66c05df742a22
     - path: assets/textcat_dev.jsonl
-      md5: eec94532c4a0b3efe5de268b29f1ba1d
+      md5: 3315d7f220b3c1e2cb64623630d971a9
     - path: scripts/convert.py
       md5: a4be472b527e029d4a66b594ecf628cf
   outs:
     - path: corpus/multilabel-train.spacy
-      md5: 8d07f60eeae241f121e4a79597ef23c7
+      md5: a74bc3ae08638f6c3135f6cf56e90f4c
     - path: corpus/multilabel-dev.spacy
-      md5: 28bd315a5e0d48623c01bab0cb8a6356
+      md5: e9b9ea78abb9c99da5efb725ab00fc6f
     - path: corpus/textcat-train.spacy
-      md5: b4c2f448cfd9c67ee5b2a65d77436dce
+      md5: 2891b27da3e7289734b0fec2f3ed3dd8
     - path: corpus/textcat-dev.spacy
-      md5: 47db86ace5a5b99012b25aae719c2605
+      md5: 8bf2e8d6c4755500f46fc6eb931a7a0a
   spacy_version: 3.2.4
   spacy_git_version: b50fe5ec6
 train:
   cmd: python -m spacy run train
   script:
-    - python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy
-      --paths.dev corpus/dev.spacy --nlp.lang en --gpu-id -1
+    - python -m spacy train configs/config_multilabel.cfg --output training/multilabel
+      --paths.train corpus/multilabel-train.spacy --paths.dev corpus/multilabel-dev.spacy
+      --nlp.lang en --gpu-id -1
+    - python -m spacy train configs/config_textcat.cfg --output training/textcat/
+      --paths.train corpus/textcat-train.spacy --paths.dev corpus/textcat-dev.spacy
+      --nlp.lang en --gpu-id -1
   deps:
-    - path: configs/config.cfg
-      md5: fc5710e530cf948597c9cee67738dc22
-    - path: corpus/train.spacy
-      md5: 9102d8b05e3e6bef5dd8175798a0e528
-    - path: corpus/dev.spacy
-      md5: 418bee65f73e70afcba5cdf856eeb384
+    - path: configs/config_multilabel.cfg
+      md5: 525faeb843672b2643e1495013a569e0
+    - path: corpus/multilabel-train.spacy
+      md5: a74bc3ae08638f6c3135f6cf56e90f4c
+    - path: corpus/multilabel-dev.spacy
+      md5: e9b9ea78abb9c99da5efb725ab00fc6f
+    - path: configs/config_textcat.cfg
+      md5: 08dc677c2a0f1b221a5b19a5e6a01405
+    - path: corpus/textcat-train.spacy
+      md5: 2891b27da3e7289734b0fec2f3ed3dd8
+    - path: corpus/textcat-dev.spacy
+      md5: 8bf2e8d6c4755500f46fc6eb931a7a0a
   outs:
-    - path: training/model-best
-      md5: 3db042bd3324b23266af73c2de34bd91
+    - path: training/multilabel/model-best
+      md5: 9fec53426f6007417b60c10320bf81ab
+    - path: training/textcat/model-best
+      md5: a9660cd27fa8c3d8f610ece8edf4862e
   spacy_version: 3.2.4
   spacy_git_version: b50fe5ec6
 evaluate:
@@ -72,18 +84,18 @@ evaluate:
       --output training/textcat/metrics.json
   deps:
     - path: corpus/multilabel-dev.spacy
-      md5: 28bd315a5e0d48623c01bab0cb8a6356
+      md5: e9b9ea78abb9c99da5efb725ab00fc6f
     - path: training/multilabel/model-best
-      md5: 2a002b573d76d88da144903bc9ab6ef8
+      md5: 9fec53426f6007417b60c10320bf81ab
     - path: corpus/textcat-dev.spacy
-      md5: 47db86ace5a5b99012b25aae719c2605
+      md5: 8bf2e8d6c4755500f46fc6eb931a7a0a
     - path: training/textcat/model-best
-      md5: 088fcdd73eb15b785d5bb6a505f2d522
+      md5: a9660cd27fa8c3d8f610ece8edf4862e
   outs:
     - path: training/multilabel/metrics.json
-      md5: 89e5a0cb9b4194e59e7f4336a9b1fb9c
+      md5: 89ff52d484e007a0aae87195a62cea48
     - path: training/textcat/metrics.json
-      md5: d7c68d1d5a72b14b6ff45459aa5f21f1
+      md5: f686fd7d03b5e7fc154fe2603fa7a0cf
   spacy_version: 3.2.4
   spacy_git_version: b50fe5ec6
 package:
@@ -160,8 +172,14 @@ preprocess:
   deps: []
   outs:
     - path: assets/tweets-textcat.jsonl
-      md5: da740d5a82acc5b288f7810859c10013
+      md5: 92f64babe62da5442d9a00732c99e746
     - path: assets/tweets-multilabel.jsonl
-      md5: fcb5c046f3f478986bb5667dcbf5907b
+      md5: 34bf34391cec50e52cdce41a3d7a9df5
+    - path: assets/tweets-textcat-ann1.jsonl
+      md5: null
+    - path: assets/tweets-textcat-ann2.jsonl
+      md5: null
+    - path: assets/tweets-textcat-ann3.jsonl
+      md5: null
   spacy_version: 3.2.4
   spacy_git_version: b50fe5ec6
