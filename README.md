@@ -21,12 +21,10 @@ Commands are only re-run if their inputs have changed.
 | `preprocess` | Preprocess raw files to jsonl |
 | `partition` | Partition jsonl |
 | `convert` | Convert the data to spaCy's binary format |
-| `ml-train` | Train the multilabel model |
-| `tc-train` | Train the textcat model |
+| `train` | Run customized training runs: 2 experiments (Baseline/textcat + Multilabel) |
 | `evaluate` | Evaluate the model and export metrics |
 | `package` | Package the trained model as a pip package |
-| `ml-visualize-model` | Visualize the model's output interactively using Streamlit |
-| `tc-visualize-model` | Visualize the model's output interactively using Streamlit |
+| `visualize-model` | Visualize the model's output interactively using Streamlit |
 
 ### ⏭ Workflows
 
@@ -38,7 +36,7 @@ inputs have changed.
 | Workflow | Steps |
 | --- | --- |
 | `preprocess-all` | `preprocess` &rarr; `partition` &rarr; `convert` |
-| `train` | `ml-train` &rarr; `tc-train` &rarr; `evaluate` |
+| `train-all` | `train` &rarr; `evaluate` |
 
 ### 🗂 Assets
 
